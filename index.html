@@ -1,0 +1,220 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #e0aaff, #bde0fe);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    h1 { color: #5a189a; }
+
+    input {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 40%;
+    }
+
+    button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background-color: #7b2cbf;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #9d4edd;
+    }
+
+    .clear-btn {
+      background-color: #ff6b6b;
+      margin-top: 10px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+    }
+
+    li {
+      background: #f5f5f5;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .bar-container {
+      width: 100%;
+      background: #eee;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+
+    .bar {
+      height: 20px;
+      width: 0%;
+      background: green;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h3>Set Budget</h3>
+  <input type="number" id="budgetInput" placeholder="Enter budget (RM)">
+  <button onclick="setBudget()">Set</button>
+
+  <h3>Add Budget</h3>
+  <input type="number" id="addBudgetInput" placeholder="Add amount (RM)">
+  <button onclick="addBudget()">Add</button>
+
+  <div class="card">
+    <h1>💸 Expense Tracker</h1>
+
+    <h3>📜 History</h3>
+    <ul id="historyList"></ul>
+
+    <button class="clear-btn" onclick="clearHistory()">🗑 Clear History</button>
+
+    <hr>
+
+    <input type="text" id="item" placeholder="What did you buy?">
+    <input type="number" id="amount" placeholder="RM">
+    <br>
+    <button onclick="addExpense()">Add</button>
+
+    <ul id="list"></ul>
+
+    <p>
+      Budget: RM <span id="budget">0.00</span><br>
+      Spent: RM <span id="spent">0.00</span><br>
+      Left: RM <span id="left">0.00</span>
+    </p>
+
+    <div class="bar-container">
+      <div class="bar" id="bar"></div>
+    </div>
+  </div>
+
+<script>
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let total = 0;
+let budget = parseFloat(localStorage.getItem("budget")) || 0;
+
+function addExpense() {
+  let item = document.getElementById("item").value;
+  let amount = parseFloat(document.getElementById("amount").value);
+
+  if (!item || !amount) return;
+
+  expenses.push({ item, amount });
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+
+  displayExpenses();
+
+  document.getElementById("item").value = "";
+  document.getElementById("amount").value = "";
+}
+
+function setBudget() {
+  let input = parseFloat(document.getElementById("budgetInput").value);
+  if (!input || input <= 0) return;
+
+  budget = input;
+  localStorage.setItem("budget", budget);
+
+  displayExpenses();
+
+  document.getElementById("budgetInput").value = "";
+}
+
+function addBudget() {
+  let extra = parseFloat(document.getElementById("addBudgetInput").value);
+  if (!extra || extra <= 0) return;
+
+  budget += extra;
+  localStorage.setItem("budget", budget);
+
+  displayExpenses();
+
+  document.getElementById("addBudgetInput").value = "";
+}
+
+function clearHistory() {
+  localStorage.removeItem("expenses");
+  expenses = [];
+  displayExpenses();
+}
+
+function displayExpenses() {
+  let list = document.getElementById("list");
+  let history = document.getElementById("historyList");
+
+  list.innerHTML = "";
+  history.innerHTML = "";
+
+  total = 0;
+
+  expenses.forEach((exp, index) => {
+    total += exp.amount;
+
+    let li = document.createElement("li");
+    li.textContent = exp.item + " - RM " + exp.amount.toFixed(2);
+
+    if (index >= expenses.length - 5) {
+      list.appendChild(li);
+    }
+
+    let hist = document.createElement("li");
+    hist.textContent = exp.item + " - RM " + exp.amount.toFixed(2);
+    history.appendChild(hist);
+  });
+
+  document.getElementById("budget").textContent = budget.toFixed(2);
+  document.getElementById("spent").textContent = total.toFixed(2);
+  document.getElementById("left").textContent = (budget - total).toFixed(2);
+
+  updateBar();
+}
+
+function updateBar() {
+  if (budget === 0) return;
+
+  let percent = (total / budget) * 100;
+  let bar = document.getElementById("bar");
+
+  bar.style.width = percent + "%";
+
+  if (percent < 70) bar.style.background = "green";
+  else if (percent < 100) bar.style.background = "orange";
+  else bar.style.background = "red";
+}
+
+displayExpenses();
+</script>
+
+</body>
+</html>
